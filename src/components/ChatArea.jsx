@@ -36,12 +36,14 @@ import {
   Shortcut as ForwardIcon,
   FormatListBulleted as ListIcon,
   OpenInNew as OpenInNewIcon,
+  ArrowBack as ArrowBackIcon,
+  Terminal as TerminalIcon,
 } from '@mui/icons-material';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 import { MessageInput } from './MessageInput';
 
-export const ChatArea = ({ onToggleRightPanel }) => {
+export const ChatArea = ({ onToggleRightPanel, onBack }) => {
   const {
     rooms,
     activeRoom,
@@ -133,14 +135,41 @@ export const ChatArea = ({ onToggleRightPanel }) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  if (!activeRoom) {
+    return (
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          bgcolor: '#07070c',
+          p: 3,
+          textAlign: 'center',
+        }}
+      >
+        <TerminalIcon sx={{ fontSize: { xs: 48, sm: 64 }, color: '#00f0ff', mb: 2, filter: 'drop-shadow(0 0 12px #00f0ff)' }} />
+        <Typography variant="h6" className="glow-cyan" sx={{ fontWeight: 700, mb: 1, letterSpacing: '0.1em' }}>
+          NEXUS COMMUNICATIONS GRID
+        </Typography>
+        <Typography variant="body2" sx={{ color: '#64748b', maxWidth: 360, fontSize: '0.85rem' }}>
+          Select a transmission channel or direct message from the sidebar to establish a secure link.
+        </Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box component="main" aria-label="Chat Main Stream" sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#07070c' }}>
       {/* Header Bar */}
       <Box
         className="hud-card"
         sx={{
-          p: 1.5,
-          px: 2.5,
+          p: { xs: 1, sm: 1.5 },
+          px: { xs: 1.5, sm: 2.5 },
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -148,17 +177,35 @@ export const ChatArea = ({ onToggleRightPanel }) => {
           bgcolor: '#0d0c1b',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          {activeRoom.type === 'channel' ? (
-            <TagIcon sx={{ color: '#00f0ff', fontSize: 24 }} />
-          ) : (
-            <Avatar src={activeRoom.avatar} imgProps={{ referrerPolicy: 'no-referrer' }} sx={{ width: 28, height: 28, border: '1px solid #ff007f' }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, minWidth: 0 }}>
+          {onBack && (
+            <Tooltip title="Back to Channels">
+              <IconButton
+                size="small"
+                onClick={onBack}
+                sx={{
+                  color: '#00f0ff',
+                  display: { xs: 'inline-flex', md: 'none' },
+                  mr: 0.5,
+                  p: 0.5,
+                  border: '1px solid rgba(0, 240, 255, 0.3)',
+                }}
+                aria-label="Back to Channels"
+              >
+                <ArrowBackIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           )}
-          <Box>
-            <Typography variant="subtitle1" className="glow-cyan" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+          {activeRoom.type === 'channel' ? (
+            <TagIcon sx={{ color: '#00f0ff', fontSize: { xs: 20, sm: 24 } }} />
+          ) : (
+            <Avatar src={activeRoom.avatar} imgProps={{ referrerPolicy: 'no-referrer' }} sx={{ width: { xs: 26, sm: 28 }, height: { xs: 26, sm: 28 }, border: '1px solid #ff007f' }} />
+          )}
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle1" className="glow-cyan" sx={{ fontWeight: 700, lineHeight: 1.2, fontSize: { xs: '0.9rem', sm: '1rem' }, noWrap: true }}>
               {activeRoom.name}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>
+            <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem', display: 'block', noWrap: true }}>
               {activeRoom.type === 'channel'
                 ? `MEMBERS: ${activeRoom.members?.length || 1} NETRUNNERS`
                 : activeRoomIsOnline
@@ -185,7 +232,7 @@ export const ChatArea = ({ onToggleRightPanel }) => {
           sx={{
             bgcolor: 'rgba(0, 240, 255, 0.06)',
             borderBottom: '1px solid rgba(0, 240, 255, 0.25)',
-            px: 2.5,
+            px: { xs: 1.5, sm: 2.5 },
             py: 0.8,
             display: 'flex',
             alignItems: 'center',
@@ -219,7 +266,7 @@ export const ChatArea = ({ onToggleRightPanel }) => {
                 ? `PINNED (${(activePinIndex % latestFirstPinnedMessages.length) + 1}/${latestFirstPinnedMessages.length}):`
                 : 'PINNED:'}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#cbd5e1', noWrap: true, maxWidth: { xs: 200, sm: 400 } }}>
+            <Typography variant="caption" sx={{ color: '#cbd5e1', noWrap: true, maxWidth: { xs: 120, sm: 280, md: 450 } }}>
               {currentPinnedMsg?.senderName}: {currentPinnedMsg?.content || (currentPinnedMsg?.attachmentUrl ? '📷 Attachment' : 'Transmission')}
             </Typography>
           </Box>
@@ -380,10 +427,10 @@ export const ChatArea = ({ onToggleRightPanel }) => {
                   src={msg.senderAvatar || msg.sender?.avatarUrl}
                   alt={msg.senderName || msg.sender?.name}
                   imgProps={{ referrerPolicy: 'no-referrer' }}
-                  sx={{ width: 34, height: 34, border: isMe ? '1px solid #00f0ff' : '1px solid #ff007f' }}
+                  sx={{ width: { xs: 28, sm: 34 }, height: { xs: 28, sm: 34 }, border: isMe ? '1px solid #00f0ff' : '1px solid #ff007f' }}
                 />
 
-                <Box sx={{ maxWidth: '70%' }}>
+                <Box sx={{ maxWidth: { xs: '88%', sm: '80%', md: '70%' } }}>
                   <Box
                     sx={{
                       display: 'flex',
@@ -634,7 +681,7 @@ export const ChatArea = ({ onToggleRightPanel }) => {
 
                 {/* More Options Icon Button — hidden for deleted messages */}
                 {!msg.isDeleted && (
-                  <Box className="msg-more-btn" sx={{ alignSelf: 'center', opacity: 0.7, transition: 'opacity 0.2s' }}>
+                  <Box className="msg-more-btn" sx={{ alignSelf: 'center', opacity: { xs: 0.85, md: 0.7 }, transition: 'opacity 0.2s' }}>
                     <Tooltip title="Message Options">
                       <IconButton
                         size="small"

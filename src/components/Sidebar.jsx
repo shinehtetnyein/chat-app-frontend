@@ -27,11 +27,16 @@ import {
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 
-export const Sidebar = ({ onOpenCreateGroup, onOpenNewDM }) => {
+export const Sidebar = ({ onOpenCreateGroup, onOpenNewDM, onSelectRoom }) => {
   const { rooms, activeRoomId, selectRoom, contacts } = useChat();
   const auth = useAuth();
   const user = auth ? auth.user : null;
   const [searchTerm, setSearchTerm] = useState('');
+
+  const handleRoomClick = (roomId) => {
+    selectRoom(roomId);
+    onSelectRoom?.(roomId);
+  };
 
   // Deduplicate rooms by type and normalized name to prevent duplicate sidebar entries
   const uniqueRoomsMap = new Map();
@@ -151,10 +156,11 @@ export const Sidebar = ({ onOpenCreateGroup, onOpenNewDM }) => {
                 <ListItem key={room.id} disablePadding sx={{ mb: 0.5 }}>
                   <ListItemButton
                     selected={isSelected}
-                    onClick={() => selectRoom(room.id)}
+                    onClick={() => handleRoomClick(room.id)}
                     sx={{
                       borderRadius: 1,
-                      py: 0.6,
+                      minHeight: 44,
+                      py: 0.8,
                       px: 1.5,
                       borderLeft: isSelected ? '3px solid #00f0ff' : '3px solid transparent',
                       bgcolor: isSelected ? 'rgba(0, 240, 255, 0.12)' : 'transparent',
@@ -225,10 +231,11 @@ export const Sidebar = ({ onOpenCreateGroup, onOpenNewDM }) => {
                 <ListItem key={room.id} disablePadding sx={{ mb: 0.5 }}>
                   <ListItemButton
                     selected={isSelected}
-                    onClick={() => selectRoom(room.id)}
+                    onClick={() => handleRoomClick(room.id)}
                     sx={{
                       borderRadius: 1,
-                      py: 0.6,
+                      minHeight: 44,
+                      py: 0.8,
                       px: 1.5,
                       borderLeft: isSelected ? '3px solid #ff007f' : '3px solid transparent',
                       bgcolor: isSelected ? 'rgba(255, 0, 127, 0.12)' : 'transparent',

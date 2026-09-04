@@ -25,23 +25,24 @@ export const RightPanel = ({ onClose, onOpenSettings }) => {
 
   // Extract room members
   const memberList = contacts.filter(
-    (c) => activeRoom.members?.includes(c.id) || c.id === 'usr_netrunner_01'
+    (c) => activeRoom?.members?.includes(c.id) || c.id === 'usr_netrunner_01'
   );
 
   // Extract shared media attachments from message history
-  const sharedMedia = messages.filter((m) => m.attachmentUrl);
+  const sharedMedia = (messages || []).filter((m) => m.attachmentUrl);
 
   return (
     <Box
       className="hud-card"
       sx={{
-        width: 280,
+        width: '100%',
+        maxWidth: { lg: 320 },
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderLeft: '1px solid rgba(0, 240, 255, 0.2)',
+        borderLeft: { xs: 'none', lg: '1px solid rgba(0, 240, 255, 0.2)' },
         bgcolor: '#0c0b18',
-        p: 2,
+        p: { xs: 1.5, sm: 2 },
         overflowY: 'auto',
       }}
     >

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ThemeProvider, CssBaseline, Box, CircularProgress, Typography } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box, CircularProgress, Typography, useTheme, useMediaQuery, Drawer } from '@mui/material';
 import { cyberpunkTheme } from './theme/cyberpunkTheme';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
@@ -55,35 +55,95 @@ const SplashLoader = () => (
 
 // ── Main chat layout (only rendered when user is authenticated) ────────────
 const MainLayout = () => {
-  const { rightPanelOpen, setRightPanelOpen, toast, closeToast } = useChat();
+  const { rightPanelOpen, setRightPanelOpen, toast, closeToast, activeRoomId } = useChat();
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
   const [newDMOpen, setNewDMOpen] = useState(false);
   const [roomSettingsOpen, setRoomSettingsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
+
+  // On mobile: true shows ChatArea, false shows Sidebar
+  const [mobileShowChat, setMobileShowChat] = useState(Boolean(activeRoomId));
+
+  // Sync mobile view if activeRoomId changes
+  useEffect(() => {
+    if (activeRoomId && isMobile) {
+      setMobileShowChat(true);
+    }
+  }, [activeRoomId, isMobile]);
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', overflow: 'hidden' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', overflow: 'hidden' }}>
       {/* Top Navbar */}
       <Navbar onOpenProfile={() => setProfileOpen(true)} />
       <OAuthCallbackHandler />
 
-      {/* Three-Pane Chat Layout */}
+      {/* Responsive Chat Layout */}
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
         {/* Left Sidebar */}
-        <Sidebar
-          onOpenCreateGroup={() => setCreateGroupOpen(true)}
-          onOpenNewDM={() => setNewDMOpen(true)}
-        />
+        <Box
+          sx={{
+            display: isMobile ? (mobileShowChat ? 'none' : 'flex') : 'flex',
+            width: isMobile ? '100%' : { md: 280, lg: 320 },
+            flexShrink: 0,
+            height: '100%',
+          }}
+        >
+          <Sidebar
+            onOpenCreateGroup={() => setCreateGroupOpen(true)}
+            onOpenNewDM={() => setNewDMOpen(true)}
+            onSelectRoom={() => {
+              if (isMobile) setMobileShowChat(true);
+            }}
+          />
+        </Box>
 
         {/* Main Chat Stream */}
-        <ChatArea onToggleRightPanel={() => setRightPanelOpen((prev) => !prev)} />
-
-        {/* Right Info Panel */}
-        {rightPanelOpen && (
-          <RightPanel
-            onClose={() => setRightPanelOpen(false)}
-            onOpenSettings={() => setRoomSettingsOpen(true)}
+        <Box
+          sx={{
+            display: isMobile ? (mobileShowChat ? 'flex' : 'none') : 'flex',
+            flex: 1,
+            height: '100%',
+            overflow: 'hidden',
+          }}
+        >
+          <ChatArea
+            onToggleRightPanel={() => setRightPanelOpen((prev) => !prev)}
+            onBack={() => setMobileShowChat(false)}
           />
+        </Box>
+
+        {/* Right Info Panel: Inline on desktop (> 1200px), Drawer on mobile/tablet */}
+        {isDesktop ? (
+          rightPanelOpen && (
+            <RightPanel
+              onClose={() => setRightPanelOpen(false)}
+              onOpenSettings={() => setRoomSettingsOpen(true)}
+            />
+          )
+        ) : (
+          <Drawer
+            anchor="right"
+            open={rightPanelOpen}
+            onClose={() => setRightPanelOpen(false)}
+            PaperProps={{
+              sx: {
+                width: { xs: '88vw', sm: 340 },
+                maxWidth: 380,
+                bgcolor: '#0c0b18',
+                borderLeft: '1px solid rgba(0, 240, 255, 0.3)',
+                backgroundImage: 'none',
+              },
+            }}
+          >
+            <RightPanel
+              onClose={() => setRightPanelOpen(false)}
+              onOpenSettings={() => setRoomSettingsOpen(true)}
+            />
+          </Drawer>
         )}
       </Box>
 

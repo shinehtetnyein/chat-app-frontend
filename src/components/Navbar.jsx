@@ -90,14 +90,14 @@ export const Navbar = ({ onOpenProfile }) => {
         borderBottom: '1px solid rgba(0, 240, 255, 0.25)',
       }}
     >
-      <Toolbar sx={{ justifyContent: 'space-between', minHeight: '56px !important' }}>
+      <Toolbar sx={{ justifyContent: 'space-between', minHeight: { xs: '50px !important', sm: '56px !important' }, px: { xs: 1.5, sm: 2 } }}>
         {/* Brand Logo & HUD Title */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <TerminalIcon sx={{ color: '#00f0ff', filter: 'drop-shadow(0 0 6px #00f0ff)' }} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
+          <TerminalIcon sx={{ color: '#00f0ff', fontSize: { xs: 20, sm: 24 }, filter: 'drop-shadow(0 0 6px #00f0ff)' }} />
           <Typography
             variant="h6"
             className="glow-cyan"
-            sx={{ fontWeight: 700, letterSpacing: '0.12em', display: 'flex', alignItems: 'center', gap: 1 }}
+            sx={{ fontWeight: 700, letterSpacing: '0.12em', fontSize: { xs: '0.95rem', sm: '1.25rem' }, display: 'flex', alignItems: 'center', gap: 0.5 }}
           >
             NEXUS<span style={{ color: '#ff007f' }}>_CHAT</span>
           </Typography>
@@ -107,6 +107,7 @@ export const Navbar = ({ onOpenProfile }) => {
             icon={connected ? <SensorIcon style={{ color: '#00ff66' }} /> : <SensorOffIcon style={{ color: '#ff007f' }} />}
             label={connected ? 'GRID_ONLINE' : 'CONNECTING...'}
             sx={{
+              display: { xs: 'none', sm: 'inline-flex' },
               backgroundColor: connected ? 'rgba(0, 255, 102, 0.1)' : 'rgba(255, 0, 127, 0.1)',
               borderColor: connected ? '#00ff66' : '#ff007f',
               color: connected ? '#00ff66' : '#ff007f',
@@ -119,17 +120,16 @@ export const Navbar = ({ onOpenProfile }) => {
         </Box>
 
         {/* User Auth Section */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
           {user ? (
-            console.log(user),
             <>
               {authError ? (
-                <Typography variant="caption" sx={{ color: '#ffdf00', fontWeight: 700, display: { xs: 'none', sm: 'block' } }}>
+                <Typography variant="caption" sx={{ color: '#ffdf00', fontWeight: 700, display: { xs: 'none', md: 'block' } }}>
                   {authError}
                 </Typography>
               ) : null}
               <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#e2e8f0' }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#e2e8f0', fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                   {user.name}
                 </Typography>
                 <Typography variant="caption" sx={{ color: '#00f0ff', fontSize: '0.65rem' }}>
@@ -138,7 +138,7 @@ export const Navbar = ({ onOpenProfile }) => {
               </Box>
 
               <IconButton onClick={handleOpenMenu} sx={{ p: 0.5, border: '1px solid #00f0ff' }}>
-                <Avatar alt={user.name} src={user.avatarUrl} imgProps={{ referrerPolicy: 'no-referrer' }} sx={{ width: 34, height: 34 }} />
+                <Avatar alt={user.name} src={user.avatarUrl} imgProps={{ referrerPolicy: 'no-referrer' }} sx={{ width: { xs: 30, sm: 34 }, height: { xs: 30, sm: 34 } }} />
               </IconButton>
 
               <Menu

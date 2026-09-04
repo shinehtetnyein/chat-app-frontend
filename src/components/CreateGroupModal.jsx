@@ -37,8 +37,17 @@ export const CreateGroupModal = ({ open, onClose }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} PaperProps={{ className: 'hud-card', sx: { width: 400, p: 1 } }}>
-      <DialogTitle className="glow-cyan" sx={{ fontWeight: 700, letterSpacing: '0.08em' }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      PaperProps={{
+        className: 'hud-card',
+        sx: { width: { xs: '92vw', sm: 400 }, p: { xs: 0.5, sm: 1 }, m: { xs: 1, sm: 2 } },
+      }}
+    >
+      <DialogTitle className="glow-cyan" sx={{ fontWeight: 700, letterSpacing: '0.08em', fontSize: { xs: '1rem', sm: '1.25rem' } }}>
         CREATE NEW GROUP CHANNEL
       </DialogTitle>
       
