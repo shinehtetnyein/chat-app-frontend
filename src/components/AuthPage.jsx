@@ -123,8 +123,10 @@ export const AuthPage = () => {
   };
 
   const handleGoogleLogin = () => {
-    const backendUrl = import.meta.env.VITE_API_URL || '';
-    window.location.href = `${backendUrl}/api/auth/google`;
+    const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const backendUrl = rawBaseUrl.replace(/\/$/, '');
+    const redirectOrigin = window.location.origin;
+    window.location.href = `${backendUrl}/api/auth/google?redirect=${encodeURIComponent(redirectOrigin)}`;
   };
 
   const inputSx = {

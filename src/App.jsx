@@ -79,7 +79,6 @@ const MainLayout = () => {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100vw', overflow: 'hidden' }}>
       {/* Top Navbar */}
       <Navbar onOpenProfile={() => setProfileOpen(true)} />
-      <OAuthCallbackHandler />
 
       {/* Responsive Chat Layout */}
       <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' }}>
@@ -183,19 +182,21 @@ const MainLayout = () => {
 const AppGate = () => {
   const { user, loading } = useAuth();
 
-  // While restoring session from storage, show splash
-  if (loading) return <SplashLoader />;
-
-  // Not authenticated → show Login / Register page
-  if (!user) return <AuthPage />;
-
-  // Authenticated → render the full chat app
   return (
-    <SocketProvider>
-      <ChatProvider>
-        <MainLayout />
-      </ChatProvider>
-    </SocketProvider>
+    <>
+      <OAuthCallbackHandler />
+      {loading ? (
+        <SplashLoader />
+      ) : !user ? (
+        <AuthPage />
+      ) : (
+        <SocketProvider>
+          <ChatProvider>
+            <MainLayout />
+          </ChatProvider>
+        </SocketProvider>
+      )}
+    </>
   );
 };
 

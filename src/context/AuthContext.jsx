@@ -33,8 +33,23 @@ export const AuthProvider = ({ children }) => {
   const [profileSaving, setProfileSaving] = useState(false);
   const previousUserIdRef = useRef(null);
 
-  // ── On mount: try to restore a session from sessionStorage ───────────────
+  // ── On mount: try to restore a session from sessionStorage or OAuth redirect ───
   useEffect(() => {
+    // 1. Check if returning from Google OAuth redirect with ?token=...
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlToken = urlParams.get('token');
+      if (urlToken) {
+        completeGoogleOAuth(urlToken);
+        window.history.replaceState({}, '', window.location.pathname);
+        setLoading(false);
+        return;
+      }
+    } catch (e) {
+      console.warn('OAuth URL parse notice:', e);
+    }
+
+    // 2. Otherwise restore session from sessionStorage
     const savedToken = sessionStorage.getItem(SESSION_TOKEN_KEY);
     const savedUser = sessionStorage.getItem(SESSION_USER_KEY);
 
