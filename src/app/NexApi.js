@@ -8,7 +8,7 @@
 // file never has to know a raw URL — only NexUrl.js does.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { NexUrl } from './nexUrl';
+import { NexUrl } from './NexUrl';
 
 export class ApiError extends Error {
   constructor(message, status, data) {
