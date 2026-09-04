@@ -17,9 +17,10 @@
 // you can safely set SOCKET_URL to '' or point it at the same base.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-
-const API_PREFIX = '/api';
+// In client/src/app/NexUrl.js
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+export const SOCKET_URL = BASE_URL || 'http://localhost:5000';
+const API_PREFIX = BASE_URL ? `${BASE_URL.replace(/\/$/, '')}/api` : '/api';
 
 export const NexUrl = {
   auth: {
