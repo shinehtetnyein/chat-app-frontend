@@ -105,6 +105,8 @@ const MainLayout = () => {
           sx={{
             display: isMobile ? (mobileShowChat ? 'flex' : 'none') : 'flex',
             flex: 1,
+            minWidth: 0,
+            width: '100%',
             height: '100%',
             overflow: 'hidden',
           }}
@@ -112,6 +114,8 @@ const MainLayout = () => {
           <ChatArea
             onToggleRightPanel={() => setRightPanelOpen((prev) => !prev)}
             onBack={() => setMobileShowChat(false)}
+            onOpenCreateGroup={() => setCreateGroupOpen(true)}
+            onOpenNewDM={() => setNewDMOpen(true)}
           />
         </Box>
 

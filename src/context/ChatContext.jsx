@@ -5,7 +5,7 @@ import { roomsApi, usersApi, messagesApi, uploadApi } from "../app/NexApi";
 
 const ChatContext = createContext(null);
 
-const DEFAULT_ROOMS = [
+export const MOCK_TEST_ROOMS = [
   {
     id: "room_cyber_main",
     name: "general-grid",
@@ -89,7 +89,7 @@ const mergeAndDedupeRooms = (existingRooms = [], newRooms = []) => {
   return Array.from(roomMap.values());
 };
 
-const INITIAL_MESSAGES = {
+export const MOCK_TEST_MESSAGES = {
   room_cyber_main: [
     {
       id: "m1",
@@ -131,7 +131,7 @@ const INITIAL_MESSAGES = {
   ],
 };
 
-const ALL_CONTACTS = [
+export const MOCK_TEST_CONTACTS = [
   {
     id: "usr_alt_2",
     name: "Alt_Cunningham",
@@ -174,16 +174,30 @@ const ALL_CONTACTS = [
   },
 ];
 
-export const ChatProvider = ({ children }) => {
+export const ChatProvider = ({
+  children,
+  initialRooms = [],
+  initialActiveRoomId = null,
+  initialMessages = {},
+  initialContacts = [],
+}) => {
   const { socket, connected } = useSocket();
   const { user, token, updateProfile } = useAuth();
 
-  const [rooms, setRooms] = useState(DEFAULT_ROOMS);
-  const [activeRoomId, setActiveRoomId] = useState("room_cyber_main");
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [rooms, setRooms] = useState(initialRooms);
+  const [activeRoomId, setActiveRoomId] = useState(
+    initialActiveRoomId || (initialRooms[0]?.id || null)
+  );
+  const [messages, setMessages] = useState(initialMessages);
   const [typingUsers, setTypingUsers] = useState({}); // roomId -> Set of userNames
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
-  const [contacts, setContacts] = useState(ALL_CONTACTS);
+  const [contacts, setContacts] = useState(initialContacts);
+  const [loadingRooms, setLoadingRooms] = useState(
+    Boolean(user?.id && token && initialRooms.length === 0)
+  );
+  const [loadingContacts, setLoadingContacts] = useState(
+    Boolean(user?.id && token && initialContacts.length === 0)
+  );
   const [toast, setToast] = useState({
     open: false,
     message: "",
@@ -193,25 +207,24 @@ export const ChatProvider = ({ children }) => {
   const [replyingTo, setReplyingTo] = useState(null);
 
   const resetChatState = () => {
-    setRooms(DEFAULT_ROOMS);
-    setActiveRoomId("room_cyber_main");
-    setMessages(INITIAL_MESSAGES);
+    setRooms(initialRooms);
+    setActiveRoomId(initialActiveRoomId || (initialRooms[0]?.id || null));
+    setMessages(initialMessages);
     setTypingUsers({});
     setRightPanelOpen(false);
-    setContacts(ALL_CONTACTS);
+    setContacts(initialContacts);
     setReplyingTo(null);
+    setLoadingRooms(false);
+    setLoadingContacts(false);
   };
 
   useEffect(() => {
     if (!user?.id || !token) {
       resetChatState();
-      return;
     }
-
-    resetChatState();
   }, [user?.id, token]);
 
-  const activeRoom = rooms.find((r) => r.id === activeRoomId) || rooms[0];
+  const activeRoom = (activeRoomId && rooms.find((r) => r.id === activeRoomId)) || null;
 
   const showToast = (message, severity = "info") => {
     setToast({ open: true, message, severity });
@@ -222,6 +235,10 @@ export const ChatProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    if (!activeRoomId) {
+      setLoadingMessages(false);
+      return;
+    }
     setLoadingMessages(true);
     const timer = window.setTimeout(() => setLoadingMessages(false), 300);
     return () => window.clearTimeout(timer);
@@ -229,16 +246,20 @@ export const ChatProvider = ({ children }) => {
 
   useEffect(() => {
     const loadPersistedChat = async () => {
-      if (!user?.id || !token) return;
+      if (!user?.id || !token) {
+        setLoadingRooms(false);
+        return;
+      }
 
+      setLoadingRooms(true);
       try {
         const roomData = await roomsApi.mine(token);
-        const nextRooms = roomData.rooms.map((room) => {
+        const nextRooms = (roomData?.rooms || []).map((room) => {
           let name = room.name;
           let avatar = undefined;
           let lastSeenAt = null;
           if (room.type === "dm") {
-            const otherMember = room.members.find((m) => m.id !== user.id);
+            const otherMember = (room.members || []).find((m) => m.id !== user.id);
             if (otherMember) {
               name = otherMember.name;
               avatar = otherMember.avatarUrl;
@@ -253,12 +274,12 @@ export const ChatProvider = ({ children }) => {
             lastMessage: room.lastMessage || null,
             icon: room.type === "channel" ? "#" : undefined,
             avatar,
-            members: room.members.map((m) => m.id),
-            isOnline: room.members.some((m) => m.id !== user.id && m.isOnline),
+            members: (room.members || []).map((m) => m.id),
+            isOnline: (room.members || []).some((m) => m.id !== user.id && m.isOnline),
             lastSeenAt,
             lastSeen:
               room.type === "dm"
-                ? room.members.some((m) => m.id !== user.id && m.isOnline)
+                ? (room.members || []).some((m) => m.id !== user.id && m.isOnline)
                   ? "Online"
                   : lastSeenAt
                     ? formatLastSeenAt(lastSeenAt)
@@ -267,51 +288,76 @@ export const ChatProvider = ({ children }) => {
           };
         });
 
-        if (nextRooms.length) {
+        if (nextRooms.length > 0) {
           const initialRoomId = nextRooms[0].id;
           const updatedRooms = nextRooms.map((r) =>
             r.id === initialRoomId ? { ...r, unread: 0 } : r,
           );
           setRooms(updatedRooms);
-          setActiveRoomId(initialRoomId);
+          setActiveRoomId((prev) =>
+            prev && nextRooms.some((r) => r.id === prev) ? prev : initialRoomId
+          );
 
           if (token && initialRoomId && !initialRoomId.startsWith("room_")) {
             roomsApi.markRead(token, initialRoomId).catch(() => null);
           }
+        } else if (initialRooms.length === 0) {
+          setRooms([]);
+          setActiveRoomId(null);
         }
       } catch (error) {
         console.error("Failed to load persisted rooms:", error);
+        if (initialRooms.length === 0) {
+          setRooms([]);
+          setActiveRoomId(null);
+        }
+      } finally {
+        setLoadingRooms(false);
       }
     };
 
     const loadUsers = async () => {
-      if (!user?.id || !token) return;
+      if (!user?.id || !token) {
+        setLoadingContacts(false);
+        return;
+      }
 
+      setLoadingContacts(true);
       try {
         const data = await usersApi.list(token);
-        const dbContacts = data.users.map((u) => ({
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          avatarUrl: u.avatarUrl,
-          isOnline: u.isOnline,
-          lastSeenAt: u.lastSeenAt || null,
-          lastSeen: u.isOnline
-            ? "Online"
-            : u.lastSeenAt
-              ? formatLastSeenAt(u.lastSeenAt)
-              : "OFFLINE",
-        }));
+        const dbContacts = (data?.users || [])
+          .filter((u) => u.id !== user.id)
+          .map((u) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            avatarUrl: u.avatarUrl,
+            isOnline: Boolean(u.isOnline),
+            lastSeenAt: u.lastSeenAt || null,
+            lastSeen: u.isOnline
+              ? "Online"
+              : u.lastSeenAt
+                ? formatLastSeenAt(u.lastSeenAt)
+                : "OFFLINE",
+          }));
 
-        setContacts(dbContacts);
+        if (dbContacts.length > 0 || initialContacts.length === 0) {
+          setContacts(dbContacts);
+        }
       } catch (error) {
         console.error("Failed to load users:", error);
+        if (initialContacts.length === 0) {
+          setContacts([]);
+        }
+      } finally {
+        setLoadingContacts(false);
       }
     };
 
     loadPersistedChat();
     loadUsers();
   }, [user?.id, token]);
+
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -1545,6 +1591,8 @@ export const ChatProvider = ({ children }) => {
         showToast,
         closeToast,
         loadingMessages,
+        loadingRooms,
+        loadingContacts,
         replyingTo,
         setReplyingTo,
         selectRoom,

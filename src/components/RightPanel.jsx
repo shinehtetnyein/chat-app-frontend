@@ -21,11 +21,13 @@ import {
 import { useChat } from '../context/ChatContext';
 
 export const RightPanel = ({ onClose, onOpenSettings }) => {
-  const { activeRoom, contacts, messages } = useChat();
+  const { activeRoom, contacts = [], messages = [] } = useChat();
+
+  if (!activeRoom) return null;
 
   // Extract room members
-  const memberList = contacts.filter(
-    (c) => activeRoom?.members?.includes(c.id) || c.id === 'usr_netrunner_01'
+  const memberList = (contacts || []).filter(
+    (c) => activeRoom.members?.includes(c.id) || c.id === 'usr_netrunner_01'
   );
 
   // Extract shared media attachments from message history
@@ -35,8 +37,8 @@ export const RightPanel = ({ onClose, onOpenSettings }) => {
     <Box
       className="hud-card"
       sx={{
-        width: '100%',
-        maxWidth: { lg: 320 },
+        width: { xs: '100%', lg: 320 },
+        flexShrink: 0,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',

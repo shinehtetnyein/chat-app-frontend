@@ -11,6 +11,8 @@ import {
   Avatar,
   InputAdornment,
   Badge,
+  Box,
+  Typography,
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import { useChat } from '../context/ChatContext';
@@ -60,41 +62,54 @@ export const NewDMModal = ({ open, onClose }) => {
           sx={{ mb: 2, mt: 1 }}
         />
 
-        <List sx={{ maxHeight: 250, overflowY: 'auto' }}>
-          {filtered.map((contact) => (
-            <ListItem
-              key={contact.id}
-              button
-              onClick={() => handleSelect(contact)}
-              sx={{
-                borderRadius: 1,
-                mb: 0.5,
-                '&:hover': { bgcolor: 'rgba(255, 0, 127, 0.1)' },
-              }}
-            >
-              <ListItemAvatar>
-                <Badge
-                  overlap="circular"
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  variant="dot"
-                  sx={{
-                    '& .MuiBadge-badge': {
-                      backgroundColor: contact.isOnline ? '#00ff66' : '#64748b',
-                    },
-                  }}
-                >
-                  <Avatar src={contact.avatarUrl} sx={{ width: 32, height: 32 }} />
-                </Badge>
-              </ListItemAvatar>
-              <ListItemText
-                primary={contact.name}
-                secondary={contact.isOnline ? 'Online' : contact.lastSeen || 'Offline'}
-                primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600, color: '#e2e8f0' }}
-                secondaryTypographyProps={{ fontSize: '0.7rem', color: contact.isOnline ? '#00ff66' : '#64748b' }}
-              />
-            </ListItem>
-          ))}
-        </List>
+        {filtered.length === 0 ? (
+          <Box sx={{ py: 3, px: 1, textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+              {query ? 'NO NETRUNNERS MATCHING QUERY' : 'NO OTHER NETRUNNERS DETECTED ON GRID'}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#64748b', mt: 0.5, display: 'block' }}>
+              {query
+                ? 'Try searching with another username or email.'
+                : 'When new users register, they will appear here to start a direct link.'}
+            </Typography>
+          </Box>
+        ) : (
+          <List sx={{ maxHeight: 250, overflowY: 'auto' }}>
+            {filtered.map((contact) => (
+              <ListItem
+                key={contact.id}
+                button
+                onClick={() => handleSelect(contact)}
+                sx={{
+                  borderRadius: 1,
+                  mb: 0.5,
+                  '&:hover': { bgcolor: 'rgba(255, 0, 127, 0.1)' },
+                }}
+              >
+                <ListItemAvatar>
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    variant="dot"
+                    sx={{
+                      '& .MuiBadge-badge': {
+                        backgroundColor: contact.isOnline ? '#00ff66' : '#64748b',
+                      },
+                    }}
+                  >
+                    <Avatar src={contact.avatarUrl} sx={{ width: 32, height: 32 }} />
+                  </Badge>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={contact.name}
+                  secondary={contact.isOnline ? 'Online' : contact.lastSeen || 'Offline'}
+                  primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600, color: '#e2e8f0' }}
+                  secondaryTypographyProps={{ fontSize: '0.7rem', color: contact.isOnline ? '#00ff66' : '#64748b' }}
+                />
+              </ListItem>
+            ))}
+          </List>
+        )}
       </DialogContent>
     </Dialog>
   );

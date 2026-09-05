@@ -15,6 +15,8 @@ import {
   Divider,
   Button,
   Tooltip,
+  Skeleton,
+  CircularProgress,
 } from '@mui/material';
 import {
   Tag as TagIcon,
@@ -28,7 +30,7 @@ import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 
 export const Sidebar = ({ onOpenCreateGroup, onOpenNewDM, onSelectRoom }) => {
-  const { rooms, activeRoomId, selectRoom, contacts } = useChat();
+  const { rooms = [], activeRoomId, selectRoom, contacts = [], loadingRooms } = useChat();
   const auth = useAuth();
   const user = auth ? auth.user : null;
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,7 +76,7 @@ export const Sidebar = ({ onOpenCreateGroup, onOpenNewDM, onSelectRoom }) => {
     <Box
       className="hud-card"
       sx={{
-        width: { xs: '100%', md: 280 },
+        width: '100%',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -141,63 +143,102 @@ export const Sidebar = ({ onOpenCreateGroup, onOpenNewDM, onSelectRoom }) => {
             </Tooltip>
           </Box>
 
-          <List disablePadding>
-            {channels.map((room) => {
-              const isSelected = room.id === activeRoomId;
-              const isOnline = contacts.some((c) => c.isOnline && room.members?.includes(c.id));
-              const rawMsgText =
-                room.lastMessageText ||
-                (typeof room.lastMessage === 'string'
-                  ? room.lastMessage
-                  : room.lastMessage?.content || (room.lastMessage?.attachmentUrl ? '📷 Attachment' : ''));
-              const lastMsgText = formatPreviewText(rawMsgText);
+          {loadingRooms ? (
+            <Box sx={{ p: 0.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Skeleton variant="rounded" height={38} sx={{ bgcolor: 'rgba(0, 240, 255, 0.08)', borderRadius: 1 }} />
+              <Skeleton variant="rounded" height={38} sx={{ bgcolor: 'rgba(0, 240, 255, 0.05)', borderRadius: 1 }} />
+              <Skeleton variant="rounded" height={38} sx={{ bgcolor: 'rgba(0, 240, 255, 0.08)', borderRadius: 1 }} />
+            </Box>
+          ) : channels.length === 0 ? (
+            <Box
+              sx={{
+                p: 1.5,
+                textAlign: 'center',
+                bgcolor: 'rgba(0, 240, 255, 0.03)',
+                border: '1px dashed rgba(0, 240, 255, 0.25)',
+                borderRadius: 1.5,
+                my: 1,
+              }}
+            >
+              <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block', mb: 1, fontSize: '0.72rem' }}>
+                NO CHANNELS JOINED
+              </Typography>
+              <Button
+                fullWidth
+                size="small"
+                variant="outlined"
+                startIcon={<AddIcon fontSize="small" />}
+                onClick={onOpenCreateGroup}
+                sx={{
+                  fontSize: '0.68rem',
+                  py: 0.4,
+                  borderColor: 'rgba(0, 240, 255, 0.4)',
+                  color: '#00f0ff',
+                  '&:hover': { borderColor: '#00f0ff', bgcolor: 'rgba(0, 240, 255, 0.1)' },
+                }}
+              >
+                + CREATE CHANNEL
+              </Button>
+            </Box>
+          ) : (
+            <List disablePadding>
+              {channels.map((room) => {
+                const isSelected = room.id === activeRoomId;
+                const isOnline = contacts.some((c) => c.isOnline && room.members?.includes(c.id));
+                const rawMsgText =
+                  room.lastMessageText ||
+                  (typeof room.lastMessage === 'string'
+                    ? room.lastMessage
+                    : room.lastMessage?.content || (room.lastMessage?.attachmentUrl ? '📷 Attachment' : ''));
+                const lastMsgText = formatPreviewText(rawMsgText);
 
-              return (
-                <ListItem key={room.id} disablePadding sx={{ mb: 0.5 }}>
-                  <ListItemButton
-                    selected={isSelected}
-                    onClick={() => handleRoomClick(room.id)}
-                    sx={{
-                      borderRadius: 1,
-                      minHeight: 44,
-                      py: 0.8,
-                      px: 1.5,
-                      borderLeft: isSelected ? '3px solid #00f0ff' : '3px solid transparent',
-                      bgcolor: isSelected ? 'rgba(0, 240, 255, 0.12)' : 'transparent',
-                      '&:hover': { bgcolor: 'rgba(0, 240, 255, 0.06)' },
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 28, color: isSelected ? '#00f0ff' : '#94a3b8' }}>
-                      <TagIcon fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={room.name}
-                      secondary={renderSecondary(room, lastMsgText)}
-                      primaryTypographyProps={{
-                        fontSize: '0.85rem',
-                        fontWeight: isSelected ? 700 : 500,
-                        color: isSelected ? '#00f0ff' : '#cbd5e1',
-                        noWrap: true,
+                return (
+                  <ListItem key={room.id} disablePadding sx={{ mb: 0.5 }}>
+                    <ListItemButton
+                      selected={isSelected}
+                      onClick={() => handleRoomClick(room.id)}
+                      sx={{
+                        borderRadius: 1,
+                        minHeight: 44,
+                        py: 0.8,
+                        px: 1.5,
+                        borderLeft: isSelected ? '3px solid #00f0ff' : '3px solid transparent',
+                        bgcolor: isSelected ? 'rgba(0, 240, 255, 0.12)' : 'transparent',
+                        '&:hover': { bgcolor: 'rgba(0, 240, 255, 0.06)' },
                       }}
-                      secondaryTypographyProps={{
-                        fontSize: '0.72rem',
-                        color: room.unread > 0 ? '#00f0ff' : '#64748b',
-                        fontWeight: room.unread > 0 ? 600 : 400,
-                        noWrap: true,
-                      }}
-                    />
-                    {room.unread > 0 && (
-                      <Badge
-                        badgeContent={room.unread}
-                        color="secondary"
-                        sx={{ ml: 1, '& .MuiBadge-badge': { fontSize: '0.65rem', height: 16, minWidth: 16 } }}
+                    >
+                      <ListItemIcon sx={{ minWidth: 28, color: isSelected ? '#00f0ff' : '#94a3b8' }}>
+                        <TagIcon fontSize="small" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={room.name}
+                        secondary={renderSecondary(room, lastMsgText)}
+                        primaryTypographyProps={{
+                          fontSize: '0.85rem',
+                          fontWeight: isSelected ? 700 : 500,
+                          color: isSelected ? '#00f0ff' : '#cbd5e1',
+                          noWrap: true,
+                        }}
+                        secondaryTypographyProps={{
+                          fontSize: '0.72rem',
+                          color: room.unread > 0 ? '#00f0ff' : '#64748b',
+                          fontWeight: room.unread > 0 ? 600 : 400,
+                          noWrap: true,
+                        }}
                       />
-                    )}
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
+                      {room.unread > 0 && (
+                        <Badge
+                          badgeContent={room.unread}
+                          color="secondary"
+                          sx={{ ml: 1, '& .MuiBadge-badge': { fontSize: '0.65rem', height: 16, minWidth: 16 } }}
+                        />
+                      )}
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          )}
         </Box>
 
         <Divider sx={{ borderColor: 'rgba(0, 240, 255, 0.1)', my: 1 }} />
@@ -215,76 +256,114 @@ export const Sidebar = ({ onOpenCreateGroup, onOpenNewDM, onSelectRoom }) => {
             </Tooltip>
           </Box>
 
-          <List disablePadding>
-            {dms.map((room) => {
-              const isSelected = room.id === activeRoomId;
-              const contact = contacts.find((c) => c.name === room.name);
-              const isOnline = contact ? contact.isOnline : room.isOnline;
-              const rawMsgText =
-                room.lastMessageText ||
-                (typeof room.lastMessage === 'string'
-                  ? room.lastMessage
-                  : room.lastMessage?.content || (room.lastMessage?.attachmentUrl ? '📷 Attachment' : ''));
-              const lastMsgText = formatPreviewText(rawMsgText);
+          {loadingRooms ? (
+            <Box sx={{ p: 0.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Skeleton variant="rounded" height={38} sx={{ bgcolor: 'rgba(255, 0, 127, 0.08)', borderRadius: 1 }} />
+              <Skeleton variant="rounded" height={38} sx={{ bgcolor: 'rgba(255, 0, 127, 0.05)', borderRadius: 1 }} />
+            </Box>
+          ) : dms.length === 0 ? (
+            <Box
+              sx={{
+                p: 1.5,
+                textAlign: 'center',
+                bgcolor: 'rgba(255, 0, 127, 0.03)',
+                border: '1px dashed rgba(255, 0, 127, 0.25)',
+                borderRadius: 1.5,
+                my: 1,
+              }}
+            >
+              <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block', mb: 1, fontSize: '0.72rem' }}>
+                NO DIRECT MESSAGES YET
+              </Typography>
+              <Button
+                fullWidth
+                size="small"
+                variant="outlined"
+                startIcon={<PersonAddIcon fontSize="small" />}
+                onClick={onOpenNewDM}
+                sx={{
+                  fontSize: '0.68rem',
+                  py: 0.4,
+                  borderColor: 'rgba(255, 0, 127, 0.4)',
+                  color: '#ff007f',
+                  '&:hover': { borderColor: '#ff007f', bgcolor: 'rgba(255, 0, 127, 0.1)' },
+                }}
+              >
+                + ADD FRIEND / START DM
+              </Button>
+            </Box>
+          ) : (
+            <List disablePadding>
+              {dms.map((room) => {
+                const isSelected = room.id === activeRoomId;
+                const contact = contacts.find((c) => c.name === room.name);
+                const isOnline = contact ? contact.isOnline : room.isOnline;
+                const rawMsgText =
+                  room.lastMessageText ||
+                  (typeof room.lastMessage === 'string'
+                    ? room.lastMessage
+                    : room.lastMessage?.content || (room.lastMessage?.attachmentUrl ? '📷 Attachment' : ''));
+                const lastMsgText = formatPreviewText(rawMsgText);
 
-              return (
-                <ListItem key={room.id} disablePadding sx={{ mb: 0.5 }}>
-                  <ListItemButton
-                    selected={isSelected}
-                    onClick={() => handleRoomClick(room.id)}
-                    sx={{
-                      borderRadius: 1,
-                      minHeight: 44,
-                      py: 0.8,
-                      px: 1.5,
-                      borderLeft: isSelected ? '3px solid #ff007f' : '3px solid transparent',
-                      bgcolor: isSelected ? 'rgba(255, 0, 127, 0.12)' : 'transparent',
-                      '&:hover': { bgcolor: 'rgba(255, 0, 127, 0.06)' },
-                    }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 32 }}>
-                      <Badge
-                        overlap="circular"
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                        variant="dot"
-                        sx={{
-                          '& .MuiBadge-badge': {
-                            backgroundColor: isOnline ? '#00ff66' : '#64748b',
-                            boxShadow: isOnline ? '0 0 6px #00ff66' : 'none',
-                          },
+                return (
+                  <ListItem key={room.id} disablePadding sx={{ mb: 0.5 }}>
+                    <ListItemButton
+                      selected={isSelected}
+                      onClick={() => handleRoomClick(room.id)}
+                      sx={{
+                        borderRadius: 1,
+                        minHeight: 44,
+                        py: 0.8,
+                        px: 1.5,
+                        borderLeft: isSelected ? '3px solid #ff007f' : '3px solid transparent',
+                        bgcolor: isSelected ? 'rgba(255, 0, 127, 0.12)' : 'transparent',
+                        '&:hover': { bgcolor: 'rgba(255, 0, 127, 0.06)' },
+                      }}
+                    >
+                      <ListItemIcon sx={{ minWidth: 32 }}>
+                        <Badge
+                          overlap="circular"
+                          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                          variant="dot"
+                          sx={{
+                            '& .MuiBadge-badge': {
+                              backgroundColor: isOnline ? '#00ff66' : '#64748b',
+                              boxShadow: isOnline ? '0 0 6px #00ff66' : 'none',
+                            },
+                          }}
+                        >
+                          <Avatar src={room.avatar} imgProps={{ referrerPolicy: 'no-referrer' }} sx={{ width: 24, height: 24 }} />
+                        </Badge>
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={room.name}
+                        secondary={renderSecondary(room, lastMsgText)}
+                        primaryTypographyProps={{
+                          fontSize: '0.85rem',
+                          fontWeight: isSelected ? 700 : 500,
+                          color: isSelected ? '#ff007f' : '#cbd5e1',
+                          noWrap: true,
                         }}
-                      >
-                        <Avatar src={room.avatar} imgProps={{ referrerPolicy: 'no-referrer' }} sx={{ width: 24, height: 24 }} />
-                      </Badge>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={room.name}
-                      secondary={renderSecondary(room, lastMsgText)}
-                      primaryTypographyProps={{
-                        fontSize: '0.85rem',
-                        fontWeight: isSelected ? 700 : 500,
-                        color: isSelected ? '#ff007f' : '#cbd5e1',
-                        noWrap: true,
-                      }}
-                      secondaryTypographyProps={{
-                        fontSize: '0.72rem',
-                        color: room.unread > 0 ? '#ff007f' : '#64748b',
-                        fontWeight: room.unread > 0 ? 600 : 400,
-                        noWrap: true,
-                      }}
-                    />
-                    {room.unread > 0 && (
-                      <Badge
-                        badgeContent={room.unread}
-                        color="secondary"
-                        sx={{ ml: 1, '& .MuiBadge-badge': { fontSize: '0.65rem', height: 16, minWidth: 16 } }}
+                        secondaryTypographyProps={{
+                          fontSize: '0.72rem',
+                          color: room.unread > 0 ? '#ff007f' : '#64748b',
+                          fontWeight: room.unread > 0 ? 600 : 400,
+                          noWrap: true,
+                        }}
                       />
-                    )}
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
+                      {room.unread > 0 && (
+                        <Badge
+                          badgeContent={room.unread}
+                          color="secondary"
+                          sx={{ ml: 1, '& .MuiBadge-badge': { fontSize: '0.65rem', height: 16, minWidth: 16 } }}
+                        />
+                      )}
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          )}
         </Box>
       </Box>
     </Box>

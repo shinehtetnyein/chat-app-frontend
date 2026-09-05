@@ -19,6 +19,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  CircularProgress,
 } from '@mui/material';
 import {
   InfoOutlined as InfoIcon,
@@ -38,18 +39,21 @@ import {
   OpenInNew as OpenInNewIcon,
   ArrowBack as ArrowBackIcon,
   Terminal as TerminalIcon,
+  PersonAdd as PersonAddIcon,
+  GroupAdd as GroupAddIcon,
 } from '@mui/icons-material';
 import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 import { MessageInput } from './MessageInput';
 
-export const ChatArea = ({ onToggleRightPanel, onBack }) => {
+export const ChatArea = ({ onToggleRightPanel, onBack, onOpenCreateGroup, onOpenNewDM }) => {
   const {
     rooms,
     activeRoom,
     messages,
     typingUsers,
     loadingMessages,
+    loadingRooms,
     contacts,
     markRoomAsRead,
     setReplyingTo,
@@ -135,12 +139,13 @@ export const ChatArea = ({ onToggleRightPanel, onBack }) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  if (!activeRoom) {
+  if (loadingRooms) {
     return (
       <Box
         component="main"
         sx={{
           flex: 1,
+          width: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -151,19 +156,126 @@ export const ChatArea = ({ onToggleRightPanel, onBack }) => {
           textAlign: 'center',
         }}
       >
-        <TerminalIcon sx={{ fontSize: { xs: 48, sm: 64 }, color: '#00f0ff', mb: 2, filter: 'drop-shadow(0 0 12px #00f0ff)' }} />
-        <Typography variant="h6" className="glow-cyan" sx={{ fontWeight: 700, mb: 1, letterSpacing: '0.1em' }}>
-          NEXUS COMMUNICATIONS GRID
+        <CircularProgress size={44} sx={{ color: '#00f0ff', mb: 2 }} />
+        <Typography variant="h6" className="glow-cyan" sx={{ fontWeight: 700, mb: 1, letterSpacing: '0.12em' }}>
+          INITIALIZING SECURE LINK…
         </Typography>
-        <Typography variant="body2" sx={{ color: '#64748b', maxWidth: 360, fontSize: '0.85rem' }}>
-          Select a transmission channel or direct message from the sidebar to establish a secure link.
+        <Typography variant="caption" sx={{ color: '#64748b', letterSpacing: '0.05em' }}>
+          Retrieving encrypted net channels and direct transmissions…
         </Typography>
       </Box>
     );
   }
 
+  if (!activeRoom) {
+    return (
+      <Box
+        component="main"
+        sx={{
+          flex: 1,
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          bgcolor: '#07070c',
+          p: { xs: 2, sm: 4 },
+          textAlign: 'center',
+        }}
+      >
+        <Box
+          className="hud-card"
+          sx={{
+            p: { xs: 3, sm: 4 },
+            borderRadius: 2,
+            maxWidth: 480,
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <TerminalIcon
+            sx={{
+              fontSize: { xs: 48, sm: 60 },
+              color: '#00f0ff',
+              mb: 2,
+              filter: 'drop-shadow(0 0 16px rgba(0, 240, 255, 0.6))',
+            }}
+          />
+          <Typography
+            variant="h6"
+            className="glow-cyan"
+            sx={{ fontWeight: 700, mb: 1, letterSpacing: '0.1em', fontSize: { xs: '1.15rem', sm: '1.35rem' } }}
+          >
+            WELCOME TO NEXUS GRID
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#94a3b8', mb: 3, fontSize: '0.85rem', lineHeight: 1.6 }}>
+            No active transmission link. Connect with friends for direct messaging or initialize a group channel to get started.
+          </Typography>
+
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5, width: '100%', justifyContent: 'center' }}>
+            {onOpenNewDM && (
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<PersonAddIcon />}
+                onClick={onOpenNewDM}
+                sx={{
+                  py: 1,
+                  px: 2.5,
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  background: 'linear-gradient(45deg, #ff007f 0%, #d0006f 100%)',
+                  boxShadow: '0 0 12px rgba(255, 0, 127, 0.4)',
+                  '&:hover': {
+                    boxShadow: '0 0 20px rgba(255, 0, 127, 0.7)',
+                  },
+                }}
+              >
+                + ADD FRIEND / START DM
+              </Button>
+            )}
+            {onOpenCreateGroup && (
+              <Button
+                variant="outlined"
+                color="primary"
+                startIcon={<GroupAddIcon />}
+                onClick={onOpenCreateGroup}
+                sx={{
+                  py: 1,
+                  px: 2.5,
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  borderColor: 'rgba(0, 240, 255, 0.5)',
+                  color: '#00f0ff',
+                  '&:hover': {
+                    borderColor: '#00f0ff',
+                    bgcolor: 'rgba(0, 240, 255, 0.1)',
+                    boxShadow: '0 0 15px rgba(0, 240, 255, 0.3)',
+                  },
+                }}
+              >
+                + CREATE CHANNEL
+              </Button>
+            )}
+          </Box>
+
+          {contacts && contacts.length > 0 && (
+            <Typography variant="caption" sx={{ color: '#00ff66', mt: 3, fontWeight: 600, fontSize: '0.72rem', letterSpacing: '0.05em' }}>
+              ● {contacts.length} NETRUNNER{contacts.length > 1 ? 'S' : ''} AVAILABLE ON GRID
+            </Typography>
+          )}
+        </Box>
+      </Box>
+    );
+  }
+
   return (
-    <Box component="main" aria-label="Chat Main Stream" sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#07070c' }}>
+    <Box component="main" aria-label="Chat Main Stream" sx={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#07070c' }}>
       {/* Header Bar */}
       <Box
         className="hud-card"
@@ -308,7 +420,7 @@ export const ChatArea = ({ onToggleRightPanel, onBack }) => {
       )}
 
       {/* Messages Stream */}
-      <Box role="log" aria-live="polite" aria-label="Message Stream" sx={{ flex: 1, overflowY: 'auto', p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box role="log" aria-live="polite" aria-label="Message Stream" sx={{ flex: 1, width: '100%', overflowY: 'auto', p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {loadingMessages ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2 }}>
             <Skeleton variant="rounded" width="40%" height={50} sx={{ bgcolor: 'rgba(0, 240, 255, 0.1)' }} />
@@ -430,7 +542,14 @@ export const ChatArea = ({ onToggleRightPanel, onBack }) => {
                   sx={{ width: { xs: 28, sm: 34 }, height: { xs: 28, sm: 34 }, border: isMe ? '1px solid #00f0ff' : '1px solid #ff007f' }}
                 />
 
-                <Box sx={{ maxWidth: { xs: '88%', sm: '80%', md: '70%' } }}>
+                <Box
+                  sx={{
+                    maxWidth: { xs: '88%', sm: '80%', md: '70%' },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: isMe ? 'flex-end' : 'flex-start',
+                  }}
+                >
                   <Box
                     sx={{
                       display: 'flex',
@@ -455,8 +574,11 @@ export const ChatArea = ({ onToggleRightPanel, onBack }) => {
                   <Box
                     className="hud-card"
                     sx={{
+                      width: 'fit-content',
+                      maxWidth: '100%',
                       p: 1.5,
                       borderRadius: 2,
+                      wordBreak: 'break-word',
                       bgcolor: msg.isDeleted
                         ? 'rgba(100, 116, 139, 0.06)'
                         : isMe ? 'rgba(0, 240, 255, 0.12)' : 'rgba(255, 0, 127, 0.08)',

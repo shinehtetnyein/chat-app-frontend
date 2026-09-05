@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React, { act } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChatProvider, useChat } from '../context/ChatContext';
+import { ChatProvider, useChat, MOCK_TEST_ROOMS, MOCK_TEST_MESSAGES } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 
@@ -53,7 +53,11 @@ describe('ChatProvider sendMessage', () => {
     vi.mocked(useSocket).mockReturnValue({ socket, connected: true });
 
     render(
-      <ChatProvider>
+      <ChatProvider
+        initialRooms={MOCK_TEST_ROOMS}
+        initialMessages={MOCK_TEST_MESSAGES}
+        initialActiveRoomId="room_cyber_main"
+      >
         <TestHarness />
       </ChatProvider>
     );
@@ -112,7 +116,11 @@ describe('ChatProvider sendMessage', () => {
     };
 
     render(
-      <ChatProvider>
+      <ChatProvider
+        initialRooms={MOCK_TEST_ROOMS}
+        initialMessages={MOCK_TEST_MESSAGES}
+        initialActiveRoomId="room_cyber_main"
+      >
         <EditTestHarness />
       </ChatProvider>
     );
@@ -166,7 +174,11 @@ describe('ChatProvider sendMessage', () => {
     };
 
     render(
-      <ChatProvider>
+      <ChatProvider
+        initialRooms={MOCK_TEST_ROOMS}
+        initialMessages={MOCK_TEST_MESSAGES}
+        initialActiveRoomId="room_cyber_main"
+      >
         <DeleteTestHarness />
       </ChatProvider>
     );

@@ -141,7 +141,7 @@ export const MessageInput = () => {
   };
 
   return (
-    <Box sx={{ p: 2, bgcolor: '#0b0a16', borderTop: '1px solid rgba(0, 240, 255, 0.2)' }}>
+    <Box sx={{ p: 2, bgcolor: '#0b0a16', borderTop: '1px solid rgba(0, 240, 255, 0.2)', width: '100%' }}>
       {/* Replying To Banner Preview */}
       {replyingTo && (
         <Paper
@@ -339,7 +339,7 @@ export const MessageInput = () => {
           </Tabs>
         </Box>
 
-        <Typography variant="caption" sx={{ color: '#00f0ff', fontWeight: 700, px: 0.5, mb: 0.8, display: 'block', fontSize: '0.68rem', letterSpacing: '0.08em' }}>
+        <Typography variant="caption" sx={{ color: '#00f0ff', fontWeight: 700, px: 0.5, mb: 0.8, display: 'block', fontSize: '2rem', letterSpacing: '0.08em' }}>
           {EMOJI_CATEGORIES[activeEmojiTab]?.name}
         </Typography>
 

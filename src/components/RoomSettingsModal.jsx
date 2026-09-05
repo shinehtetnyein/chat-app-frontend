@@ -16,9 +16,11 @@ import {
 import { useChat } from '../context/ChatContext';
 
 export const RoomSettingsModal = ({ open, onClose }) => {
-  const { activeRoom, contacts } = useChat();
+  const { activeRoom, contacts = [] } = useChat();
 
-  const members = contacts.filter((c) => activeRoom.members?.includes(c.id));
+  if (!open || !activeRoom) return null;
+
+  const members = (contacts || []).filter((c) => activeRoom.members?.includes(c.id));
 
   return (
     <Dialog
@@ -37,7 +39,7 @@ export const RoomSettingsModal = ({ open, onClose }) => {
       
       <DialogContent>
         <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block', mb: 1 }}>
-          NODE_ID: {activeRoom.id}
+          NODE_ID: {activeRoom?.id}
         </Typography>
 
         <Divider sx={{ borderColor: 'rgba(0, 240, 255, 0.15)', my: 1.5 }} />
