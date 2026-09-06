@@ -20,6 +20,29 @@ describe('ChatArea Unit Tests', () => {
     vi.clearAllMocks();
   });
 
+  it('renders the conversation skeleton while rooms are loading', () => {
+    vi.mocked(useChat).mockReturnValue({
+      activeRoom: null,
+      messages: [],
+      typingUsers: [],
+      loadingRooms: true,
+      loadingMessages: false,
+      loadedMessagesRoomId: null,
+    });
+    vi.mocked(useAuth).mockReturnValue({ user: { id: 'u1' } });
+
+    render(
+      <ThemeProvider theme={cyberpunkTheme}>
+        <ChatArea onToggleRightPanel={() => {}} />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByLabelText('Chat Main Stream')).toBeDefined();
+    expect(screen.getByLabelText('Message Stream')).toBeDefined();
+    expect(document.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
+    expect(screen.queryByText('INITIALIZING SECURE LINK…')).toBeNull();
+  });
+
   it('renders loading skeletons while messages are loading', () => {
     vi.mocked(useChat).mockReturnValue({
       activeRoom: { id: 'room_1', name: 'general-grid', type: 'channel', members: ['u1'] },

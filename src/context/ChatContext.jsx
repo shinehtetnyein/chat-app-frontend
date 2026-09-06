@@ -204,6 +204,7 @@ export const ChatProvider = ({
     severity: "info",
   });
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadedMessagesRoomId, setLoadedMessagesRoomId] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
 
   const resetChatState = () => {
@@ -216,6 +217,8 @@ export const ChatProvider = ({
     setReplyingTo(null);
     setLoadingRooms(false);
     setLoadingContacts(false);
+    setLoadingMessages(false);
+    setLoadedMessagesRoomId(null);
   };
 
   useEffect(() => {
@@ -239,10 +242,10 @@ export const ChatProvider = ({
       setLoadingMessages(false);
       return;
     }
-    setLoadingMessages(true);
-    const timer = window.setTimeout(() => setLoadingMessages(false), 300);
-    return () => window.clearTimeout(timer);
-  }, [activeRoomId]);
+    if (messages[activeRoomId] === undefined && !String(activeRoomId).startsWith("room_")) {
+      setLoadingMessages(true);
+    }
+  }, [activeRoomId, messages]);
 
   useEffect(() => {
     const loadPersistedChat = async () => {
@@ -362,7 +365,11 @@ export const ChatProvider = ({
   useEffect(() => {
     const fetchMessages = async () => {
       if (!activeRoomId || !token) return;
-      if (activeRoomId.startsWith("room_")) return;
+      if (activeRoomId.startsWith("room_")) {
+        setLoadedMessagesRoomId(activeRoomId);
+        setLoadingMessages(false);
+        return;
+      }
 
       setLoadingMessages(true);
       try {
@@ -504,8 +511,10 @@ export const ChatProvider = ({
           ...prev,
           [activeRoomId]: resultMessages,
         }));
+        setLoadedMessagesRoomId(activeRoomId);
       } catch (err) {
         console.error("Failed to fetch messages for room:", activeRoomId, err);
+        setLoadedMessagesRoomId(activeRoomId);
       } finally {
         setLoadingMessages(false);
       }
@@ -1042,6 +1051,9 @@ export const ChatProvider = ({
 
   const selectRoom = (roomId) => {
     setActiveRoomId(roomId);
+    if (!messages[roomId] && !String(roomId).startsWith("room_")) {
+      setLoadingMessages(true);
+    }
     setRooms((prev) =>
       prev.map((r) => (r.id === roomId ? { ...r, unread: 0 } : r)),
     );
@@ -1591,6 +1603,7 @@ export const ChatProvider = ({
         showToast,
         closeToast,
         loadingMessages,
+        loadedMessagesRoomId: messages[activeRoomId] !== undefined ? activeRoomId : loadedMessagesRoomId,
         loadingRooms,
         loadingContacts,
         replyingTo,

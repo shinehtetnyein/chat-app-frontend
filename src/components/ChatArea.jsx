@@ -19,7 +19,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  CircularProgress,
 } from '@mui/material';
 import {
   InfoOutlined as InfoIcon,
@@ -46,6 +45,97 @@ import { useChat } from '../context/ChatContext';
 import { useAuth } from '../context/AuthContext';
 import { MessageInput } from './MessageInput';
 
+const ConversationSkeleton = ({ includeHeader = false }) => (
+  <Box
+    component={includeHeader ? 'main' : 'div'}
+    aria-label={includeHeader ? 'Chat Main Stream' : undefined}
+    sx={{
+      flex: 1,
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      bgcolor: '#07070c',
+    }}
+  >
+    {includeHeader && (
+      <Box
+        sx={{
+          p: { xs: 1, sm: 1.5 },
+          px: { xs: 1.5, sm: 2.5 },
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          borderBottom: '1px solid rgba(0, 240, 255, 0.2)',
+          bgcolor: '#0d0c1b',
+        }}
+      >
+        <Skeleton variant="circular" width={30} height={30} sx={{ bgcolor: 'rgba(0, 240, 255, 0.08)' }} />
+        <Box sx={{ flex: 1 }}>
+          <Skeleton variant="text" width="30%" height={24} sx={{ bgcolor: 'rgba(0, 240, 255, 0.08)' }} />
+          <Skeleton variant="text" width="20%" height={16} sx={{ bgcolor: 'rgba(0, 240, 255, 0.05)' }} />
+        </Box>
+        <Skeleton variant="circular" width={30} height={30} sx={{ bgcolor: 'rgba(0, 240, 255, 0.08)' }} />
+      </Box>
+    )}
+
+    <Box
+      role="log"
+      aria-live="polite"
+      aria-label={includeHeader ? 'Message Stream' : undefined}
+      sx={{ flex: 1, width: '100%', overflowY: 'auto', p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 1 }}>
+        {[...Array(6)].map((_, i) => {
+          const isMe = i === 1 || i === 4;
+          const bubbleWidth = ['62%', '45%', '70%', '38%', '55%', '48%'][i % 6];
+          const bubbleHeight = i % 2 === 0 ? 52 : 34;
+
+          return (
+            <Box
+              key={i}
+              sx={{
+                display: 'flex',
+                flexDirection: isMe ? 'row-reverse' : 'row',
+                alignItems: 'flex-start',
+                gap: 1,
+              }}
+            >
+              <Skeleton
+                variant="circular"
+                width={34}
+                height={34}
+                animation="wave"
+                sx={{ bgcolor: 'rgba(0, 240, 255, 0.08)', flexShrink: 0 }}
+              />
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', gap: 0.6, maxWidth: '80%' }}>
+                <Skeleton variant="text" width={56} height={12} animation="wave" sx={{ bgcolor: 'rgba(0, 240, 255, 0.08)' }} />
+                <Skeleton
+                  variant="rounded"
+                  width={bubbleWidth}
+                  height={bubbleHeight}
+                  animation="wave"
+                  sx={{
+                    minWidth: 110,
+                    borderRadius: 2,
+                    bgcolor: isMe ? 'rgba(0, 240, 255, 0.08)' : 'rgba(255, 0, 127, 0.07)',
+                  }}
+                />
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+
+    {includeHeader && (
+      <Box sx={{ p: 1.5, borderTop: '1px solid rgba(0, 240, 255, 0.15)' }}>
+        <Skeleton variant="rounded" height={42} sx={{ bgcolor: 'rgba(0, 240, 255, 0.06)', borderRadius: 2 }} />
+      </Box>
+    )}
+  </Box>
+);
+
 export const ChatArea = ({ onToggleRightPanel, onBack, onOpenCreateGroup, onOpenNewDM }) => {
   const {
     rooms,
@@ -53,6 +143,7 @@ export const ChatArea = ({ onToggleRightPanel, onBack, onOpenCreateGroup, onOpen
     messages,
     typingUsers,
     loadingMessages,
+    loadedMessagesRoomId,
     loadingRooms,
     contacts,
     markRoomAsRead,
@@ -139,33 +230,7 @@ export const ChatArea = ({ onToggleRightPanel, onBack, onOpenCreateGroup, onOpen
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  if (loadingRooms) {
-    return (
-      <Box
-        component="main"
-        sx={{
-          flex: 1,
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100%',
-          bgcolor: '#07070c',
-          p: 3,
-          textAlign: 'center',
-        }}
-      >
-        <CircularProgress size={44} sx={{ color: '#00f0ff', mb: 2 }} />
-        <Typography variant="h6" className="glow-cyan" sx={{ fontWeight: 700, mb: 1, letterSpacing: '0.12em' }}>
-          INITIALIZING SECURE LINK…
-        </Typography>
-        <Typography variant="caption" sx={{ color: '#64748b', letterSpacing: '0.05em' }}>
-          Retrieving encrypted net channels and direct transmissions…
-        </Typography>
-      </Box>
-    );
-  }
+  if (loadingRooms) return <ConversationSkeleton includeHeader />;
 
   if (!activeRoom) {
     return (
@@ -421,21 +486,8 @@ export const ChatArea = ({ onToggleRightPanel, onBack, onOpenCreateGroup, onOpen
 
       {/* Messages Stream */}
       <Box role="log" aria-live="polite" aria-label="Message Stream" sx={{ flex: 1, width: '100%', overflowY: 'auto', p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {loadingMessages ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, p: 2 }}>
-            <Skeleton variant="rounded" width="40%" height={50} sx={{ bgcolor: 'rgba(0, 240, 255, 0.1)' }} />
-            <Skeleton variant="rounded" width="55%" height={60} sx={{ bgcolor: 'rgba(255, 0, 127, 0.1)', alignSelf: 'flex-end' }} />
-            <Skeleton variant="rounded" width="45%" height={50} sx={{ bgcolor: 'rgba(0, 240, 255, 0.1)' }} />
-          </Box>
-        ) : messages.length === 0 ? (
-          <Box sx={{ margin: 'auto', textAlign: 'center', opacity: 0.6 }}>
-            <Typography variant="body2" className="glow-cyan">
-              --- END OF STREAM LOG ---
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-              No previous transmissions recorded in this node.
-            </Typography>
-          </Box>
+        {loadingMessages || (loadedMessagesRoomId !== undefined && loadedMessagesRoomId !== activeRoom?.id) || messages.length === 0 ? (
+          <ConversationSkeleton />
         ) : (
           messages.map((msg) => {
             if (msg.isSystem || msg.type === 'system') {
